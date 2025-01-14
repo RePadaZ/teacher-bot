@@ -2,16 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"github.com/go-telegram/bot"
 	"os"
 	"os/signal"
 	"teacher-bot/pkg/system"
 	"teacher-bot/src/filter"
 	"teacher-bot/src/handler"
-	"teacher-bot/src/text"
-
-	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
 )
 
 func main() {
@@ -23,28 +19,23 @@ func main() {
 
 	// Загрузка хэндлера по умолчанию для если не сработали другие
 	opts := []bot.Option{
-		bot.WithDefaultHandler(defaultHandler),
+		bot.WithDefaultHandler(handler.DefaultHandler),
+		bot.WithSkipGetMe(),
+		bot.WithAllowedUpdates(bot.AllowedUpdates{
+			"message",
+		}),
+		bot.WithInitialOffset(int64(-2)),
 	}
 
 	// Старт бота
 	myBot, err := bot.New(token, opts...)
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 
 	// Регистрируем наши хэндлеры
-	myBot.RegisterHandlerMatchFunc(filter.IsStar, handler.Start)
+	myBot.RegisterHandlerMatchFunc(filter.IsStart, handler.Start)
+	myBot.RegisterHandlerMatchFunc(filter.IsHelp, handler.Help)
 
 	myBot.Start(ctx)
-}
-
-// defaultHandler Хэндлера по умолчанию для если не сработали другие
-func defaultHandler(ctx context.Context, myBot *bot.Bot, update *models.Update) {
-	_, err := myBot.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
-		Text:   text.NotHandler,
-	})
-	if err != nil {
-		fmt.Printf(err.Error())
-	}
 }
