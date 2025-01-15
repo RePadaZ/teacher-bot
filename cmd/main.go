@@ -2,49 +2,60 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"github.com/go-telegram/bot"
+	"log"
 	"os"
 	"os/signal"
 	"teacher-bot/pkg/system"
 	"teacher-bot/src/filter"
 	"teacher-bot/src/handler"
-	"teacher-bot/src/text"
-
-	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
 )
 
+// initializeBot создает и настраивает бота
+func initializeBot(token string) (*bot.Bot, error) {
+	opts := []bot.Option{
+		bot.WithDefaultHandler(handler.DefaultHandler), // Хэндлер по умолчанию
+		bot.WithSkipGetMe(),                            // Пропуск вызова getMe при запуске
+		bot.WithAllowedUpdates(bot.AllowedUpdates{
+			"message",
+		}),
+		bot.WithInitialOffset(int64(-2)), // Установка начального оффсета
+	}
+
+	return bot.New(token, opts...)
+}
+
+// registerHandlers регистрирует хэндлеры для бота
+func registerHandlers(myBot *bot.Bot) {
+	myBot.RegisterHandlerMatchFunc(filter.IsStart, handler.Start)
+	myBot.RegisterHandlerMatchFunc(filter.IsHelp, handler.Help)
+}
+
 func main() {
+	// Настройка контекста с обработкой сигналов завершения
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	// Получение токена
+	// Получение токена и проверка на его наличие
 	token := system.GetBotToken()
-
-	// Загрузка хэндлера по умолчанию для если не сработали другие
-	opts := []bot.Option{
-		bot.WithDefaultHandler(defaultHandler),
+	if token == "" {
+		log.Fatal("Bot token is missing. Please provide a valid token.")
 	}
 
-	// Старт бота
-	myBot, err := bot.New(token, opts...)
+	// Инициализация бота
+	myBot, err := initializeBot(token)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to initialize bot: %v", err)
 	}
 
-	// Регистрируем наши хэндлеры
-	myBot.RegisterHandlerMatchFunc(filter.IsStar, handler.Start)
+	// Регистрация хэндлеров
+	registerHandlers(myBot)
 
+	log.Println("Bot is now running. Press CTRL-F2 to exit.")
+
+	// Запуск бота
 	myBot.Start(ctx)
-}
 
-// defaultHandler Хэндлера по умолчанию для если не сработали другие
-func defaultHandler(ctx context.Context, myBot *bot.Bot, update *models.Update) {
-	_, err := myBot.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
-		Text:   text.NotHandler,
-	})
-	if err != nil {
-		fmt.Printf(err.Error())
-	}
+	// Логирование при завершении работы
+	log.Println("Bot stopped gracefully.")
 }

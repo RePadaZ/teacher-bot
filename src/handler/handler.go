@@ -2,19 +2,38 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	"teacher-bot/src/logger"
 	"teacher-bot/src/text"
 )
 
-// Start Хэндлер для команды старт с ответом
-func Start(ctx context.Context, myBot *bot.Bot, update *models.Update) {
-	_, err := myBot.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
-		Text:   text.StartBot,
-	})
-	if err != nil {
-		fmt.Printf(err.Error())
+// DefaultHandler обрабатывает неизвестные команды
+func DefaultHandler(ctx context.Context, myBot *bot.Bot, update *models.Update) {
+	if err := sendMessage(ctx, myBot, update.Message.Chat.ID, text.NotHandler); err != nil {
+		logger.LogError(err)
 	}
+}
+
+// Start обрабатывает команду /start
+func Start(ctx context.Context, myBot *bot.Bot, update *models.Update) {
+	if err := sendMessage(ctx, myBot, update.Message.Chat.ID, text.StartBot); err != nil {
+		logger.LogError(err)
+	}
+}
+
+// Help обрабатывает команду /help
+func Help(ctx context.Context, myBot *bot.Bot, update *models.Update) {
+	if err := sendMessage(ctx, myBot, update.Message.Chat.ID, text.HelpBot); err != nil {
+		logger.LogError(err)
+	}
+}
+
+// sendMessage отправляет сообщение пользователю
+func sendMessage(ctx context.Context, myBot *bot.Bot, chatID int64, message string) error {
+	_, err := myBot.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   message,
+	})
+	return err
 }
