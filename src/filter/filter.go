@@ -7,10 +7,10 @@ import (
 
 // IsStart Фильтр для команды старт
 func IsStart(update *models.Update) bool {
-	return strings.ToLower(update.Message.Text) == "/start"
+	return update.Message != nil && strings.ToLower(update.Message.Text) == "/start"
 }
 
-// IsHelp Фильтр для команды старт
+// IsHelp Фильтр для команды хелп
 func IsHelp(update *models.Update) bool {
-	return strings.ToLower(update.Message.Text) == "/help"
+	return update.Message != nil && strings.ToLower(update.Message.Text) == "/help"
 }
