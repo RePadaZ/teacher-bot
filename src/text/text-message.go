@@ -8,5 +8,3 @@ const StartBot = "Приветствуем вас в нашем боте! Тут
 
 // HelpBot Сообщение приветсвия на команду /start
 const HelpBot = "Я помогу вам"
-
-const ErrorBadRequest = "Внутреняя ошибка сервера"

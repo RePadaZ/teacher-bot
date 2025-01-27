@@ -2,34 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/go-telegram/bot"
 	"log"
 	"os"
 	"os/signal"
 	"teacher-bot/pkg/system"
-	"teacher-bot/src/filter"
-	"teacher-bot/src/handler"
+	"teacher-bot/src/initBot"
 )
-
-// initializeBot создает и настраивает бота
-func initializeBot(token string) (*bot.Bot, error) {
-	opts := []bot.Option{
-		bot.WithDefaultHandler(handler.DefaultHandler), // Хэндлер по умолчанию
-		bot.WithSkipGetMe(),                            // Пропуск вызова getMe при запуске
-		bot.WithAllowedUpdates(bot.AllowedUpdates{
-			"message",
-		}),
-		bot.WithInitialOffset(int64(-2)), // Установка начального оффсета
-	}
-
-	return bot.New(token, opts...)
-}
-
-// registerHandlers регистрирует хэндлеры для бота
-func registerHandlers(myBot *bot.Bot) {
-	myBot.RegisterHandlerMatchFunc(filter.IsStart, handler.Start)
-	myBot.RegisterHandlerMatchFunc(filter.IsHelp, handler.Help)
-}
 
 func main() {
 	// Настройка контекста с обработкой сигналов завершения
@@ -43,13 +21,13 @@ func main() {
 	}
 
 	// Инициализация бота
-	myBot, err := initializeBot(token)
+	myBot, err := initBot.InitializeBot(token)
 	if err != nil {
 		log.Fatalf("Failed to initialize bot: %v", err)
 	}
 
 	// Регистрация хэндлеров
-	registerHandlers(myBot)
+	initBot.RegisterHandlers(myBot)
 
 	log.Println("Bot is now running. Press CTRL-F2 to exit.")
 
